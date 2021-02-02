@@ -132,6 +132,7 @@ data "aws_subnet" "eks-2" {
 resource "aws_eks_cluster" "tf-eks-1" {
   name     = "tf-eks-1"
   # role_arn = aws_iam_role.tf-eks-role.arn
+  role_arn = "arn:aws:iam::616148879479:user/terraform"
 
 
   vpc_config {
