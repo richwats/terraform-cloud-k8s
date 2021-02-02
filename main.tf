@@ -129,6 +129,22 @@ data "aws_subnet" "eks-2" {
 #   role       = aws_iam_role.tf-eks-role.name
 # }
 
+variable "map_roles" {
+  description = "Additional IAM roles to add to the aws-auth configmap."
+  type = list(object({
+    rolearn  = string
+    username = string
+    groups   = list(string)
+  }))
+
+  default = [
+    {
+      rolearn  = "arn:aws:iam::616148879479:role/admin"
+      username = "admin"
+      groups   = ["system:masters"]
+    },
+  ]
+}
 
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
@@ -143,6 +159,8 @@ module "eks" {
   # }
 
   vpc_id          = data.aws_vpc.prod-vpc.id
+
+  map_roles = var.map_roles
 
   workers_group_defaults = {
     root_volume_type = "gp2"
