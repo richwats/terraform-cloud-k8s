@@ -194,7 +194,7 @@ data "aws_eks_cluster_auth" "cluster" {
 # }
 
 output "endpoint" {
-  value = module.eks.endpoint
+  value = module.eks.cluster_endpoint
 }
 
 output "kubeconfig" {
