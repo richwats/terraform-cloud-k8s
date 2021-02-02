@@ -66,7 +66,7 @@ provider "aws" {
 
 ### Nested Modules ###
 # module "cloud-aci" {
-#   source = "./mso"
+#   source = "./modules/mso"
 #
 # }
 
@@ -77,3 +77,8 @@ provider "aws" {
 # output "test2" {
 #   value = module.cloud-aci.aws-syd-reg
 # }
+
+module "aci_demo" {
+  source  = "app.terraform.io/mel-ciscolabs-com/aci-demo/cloud"
+  version = "1.0.0"
+}
