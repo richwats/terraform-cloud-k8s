@@ -129,28 +129,78 @@ data "aws_subnet" "eks-2" {
 #   role       = aws_iam_role.tf-eks-role.name
 # }
 
-resource "aws_eks_cluster" "tf-eks-1" {
-  name     = "tf-eks-1"
-  # role_arn = aws_iam_role.tf-eks-role.arn
-  role_arn = "arn:aws:iam::616148879479:user/terraform"
 
+module "eks" {
+  source          = "terraform-aws-modules/eks/aws"
+  cluster_name    = "tf-eks1"
+  cluster_version = "1.18"
+  subnets         = [data.aws_subnet.eks-1.id, data.aws_subnet.eks-2.id]
 
-  vpc_config {
-    subnet_ids = [data.aws_subnet.eks-1.id, data.aws_subnet.eks-2.id]
-  }
+  # tags = {
+  #   Environment = "training"
+  #   GithubRepo  = "terraform-aws-eks"
+  #   GithubOrg   = "terraform-aws-modules"
+  # }
 
-  # Ensure that IAM Role permissions are created before and deleted after EKS Cluster handling.
-  # Otherwise, EKS will not be able to properly delete EKS managed EC2 infrastructure such as Security Groups.
-  # depends_on = [
-  #   aws_iam_role_policy_attachment.tf-eks-AmazonEKSClusterPolicy,
-  #   aws_iam_role_policy_attachment.tf-eks-AmazonEKSVPCResourceController,
-  # ]
+  vpc_id          = data.aws_vpc.prod-vpc.id
+
+  # workers_group_defaults = {
+  #   root_volume_type = "gp2"
+  # }
+
+  worker_groups = [
+    {
+      name                          = "tf-eks1-wg1"
+      instance_type                 = "t2.micro"
+      # additional_userdata           = "echo foo bar"
+      asg_desired_capacity          = 2
+      # additional_security_group_ids = [aws_security_group.worker_group_mgmt_one.id]
+    },
+    # {
+    #   name                          = "worker-group-2"
+    #   instance_type                 = "t2.medium"
+    #   additional_userdata           = "echo foo bar"
+    #   additional_security_group_ids = [aws_security_group.worker_group_mgmt_two.id]
+    #   asg_desired_capacity          = 1
+    # },
+  ]
 }
 
+data "aws_eks_cluster" "cluster" {
+  name = module.eks.cluster_id
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = module.eks.cluster_id
+}
+
+
+# resource "aws_eks_cluster" "tf-eks-1" {
+#   name     = "tf-eks-1"
+#   # role_arn = aws_iam_role.tf-eks-role.arn
+#   role_arn = "arn:aws:iam::616148879479:user/terraform"
+#
+#
+#   vpc_config {
+#     subnet_ids = [data.aws_subnet.eks-1.id, data.aws_subnet.eks-2.id]
+#   }
+#
+#   # Ensure that IAM Role permissions are created before and deleted after EKS Cluster handling.
+#   # Otherwise, EKS will not be able to properly delete EKS managed EC2 infrastructure such as Security Groups.
+#   # depends_on = [
+#   #   aws_iam_role_policy_attachment.tf-eks-AmazonEKSClusterPolicy,
+#   #   aws_iam_role_policy_attachment.tf-eks-AmazonEKSVPCResourceController,
+#   # ]
+# }
+
 output "endpoint" {
-  value = aws_eks_cluster.tf-eks-1.endpoint
+  value = module.eks.endpoint
+}
+
+output "kubeconfig" {
+  value = module.eks.kubeconfig
 }
 
 output "kubeconfig-certificate-authority-data" {
-  value = aws_eks_cluster.tf-eks-1.certificate_authority[0].data
+  value = module.eks.cluster_certificate_authority_data
 }
