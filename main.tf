@@ -81,4 +81,7 @@ provider "aws" {
 module "aci_demo" {
   source  = "app.terraform.io/mel-ciscolabs-com/aci-demo/cloud"
   version = "1.0.0"
+
+  vault_password = var.vault_username
+  vault_username = var.vault_password
 }
