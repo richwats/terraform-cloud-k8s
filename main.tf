@@ -248,6 +248,10 @@ module "eks" {
   # vpc_id = module.vpc.vpc_id
   vpc_id = data.aws_vpc.prod-vpc.id
 
+  workers_group_defaults = {
+    root_volume_type = "gp2"
+  }
+
   worker_groups = [
     {
       name                          = "worker-group-1"
@@ -269,6 +273,8 @@ module "eks" {
   map_roles                            = var.map_roles
   map_users                            = var.map_users
   map_accounts                         = var.map_accounts
+
+  cluster_enabled_log_types = ["audit","api"]
 }
 
 
