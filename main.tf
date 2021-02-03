@@ -245,7 +245,7 @@ module "eks" {
   # vpc_id = module.vpc.vpc_id
   vpc_id = data.aws_vpc.prod-vpc.id
 
-  node_group_defaults = {
+  node_groups_defaults = {
     ## Default to gp3 which doesn't work...
     root_volume_type = "gp2"
   }
