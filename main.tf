@@ -146,6 +146,23 @@ variable "map_roles" {
   ]
 }
 
+variable "map_users" {
+  description = "Additional IAM users to add to the aws-auth configmap."
+  type = list(object({
+    userarn  = string
+    username = string
+    groups   = list(string)
+  }))
+
+  default = [
+    {
+      userarn  = "arn:aws:iam::616148879479:user/terraform"
+      username = "terraform"
+      groups   = ["system:masters"]
+    },
+  ]
+}
+
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
   cluster_name    = "tf-eks1"
@@ -160,7 +177,8 @@ module "eks" {
 
   vpc_id          = data.aws_vpc.prod-vpc.id
 
-  map_roles = var.map_roles
+  map_roles       = var.map_roles
+  map_users       = var.map_users
 
   workers_group_defaults = {
     root_volume_type = "gp2"
