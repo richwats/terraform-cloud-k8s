@@ -153,22 +153,22 @@ variable "map_users" {
   ]
 }
 
-resource "aws_security_group" "worker_group_mgmt_one" {
-  name_prefix = "worker_group_mgmt_one"
-  # vpc_id      = module.vpc.vpc_id
-  vpc_id = data.aws_vpc.prod-vpc.id
-
-  ingress {
-    from_port = 22
-    to_port   = 22
-    protocol  = "tcp"
-
-    cidr_blocks = [
-      "0.0.0.0/0",
-      # "10.0.0.0/8",
-    ]
-  }
-}
+# resource "aws_security_group" "worker_group_mgmt_one" {
+#   name_prefix = "worker_group_mgmt_one"
+#   # vpc_id      = module.vpc.vpc_id
+#   vpc_id = data.aws_vpc.prod-vpc.id
+#
+#   ingress {
+#     from_port = 22
+#     to_port   = 22
+#     protocol  = "tcp"
+#
+#     cidr_blocks = [
+#       "0.0.0.0/0",
+#       # "10.0.0.0/8",
+#     ]
+#   }
+# }
 
 # resource "aws_security_group" "worker_group_mgmt_two" {
 #   name_prefix = "worker_group_mgmt_two"
@@ -185,24 +185,24 @@ resource "aws_security_group" "worker_group_mgmt_one" {
 #   }
 # }
 
-resource "aws_security_group" "all_worker_mgmt" {
-  name_prefix = "all_worker_management"
-  # vpc_id      = module.vpc.vpc_id
-  vpc_id = data.aws_vpc.prod-vpc.id
-
-  ingress {
-    from_port = 22
-    to_port   = 22
-    protocol  = "tcp"
-
-    cidr_blocks = [
-      "0.0.0.0/0",
-      # "10.0.0.0/8",
-      # "172.16.0.0/12",
-      # "192.168.0.0/16",
-    ]
-  }
-}
+# resource "aws_security_group" "all_worker_mgmt" {
+#   name_prefix = "all_worker_management"
+#   # vpc_id      = module.vpc.vpc_id
+#   vpc_id = data.aws_vpc.prod-vpc.id
+#
+#   ingress {
+#     from_port = 22
+#     to_port   = 22
+#     protocol  = "tcp"
+#
+#     cidr_blocks = [
+#       "0.0.0.0/0",
+#       # "10.0.0.0/8",
+#       # "172.16.0.0/12",
+#       # "192.168.0.0/16",
+#     ]
+#   }
+# }
 
 # module "vpc" {
 #   source  = "terraform-aws-modules/vpc/aws"
@@ -263,9 +263,9 @@ module "eks" {
       #   GithubRepo  = "terraform-aws-eks"
       #   GithubOrg   = "terraform-aws-modules"
       # }
-      # additional_tags = {
-      #   ExtraTag = "example"
-      # }
+      additional_tags = {
+        EPG = "tf-eks-worker"
+      }
     }
   }
   # workers_group_defaults = {
