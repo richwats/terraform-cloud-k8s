@@ -168,6 +168,7 @@ module "eks" {
   cluster_name    = "tf-eks1"
   cluster_version = "1.18"
   subnets         = [data.aws_subnet.eks-1.id, data.aws_subnet.eks-2.id]
+  write_kubeconfig = false
 
   # tags = {
   #   Environment = "training"
