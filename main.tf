@@ -264,7 +264,7 @@ module "eks" {
       #   GithubOrg   = "terraform-aws-modules"
       # }
       additional_tags = {
-        EPG = "tf-eks-worker"
+        EPG = "tf-k8s-worker"
       }
     }
   }
