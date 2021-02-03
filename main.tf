@@ -244,38 +244,47 @@ data "aws_subnet" "eks-2" {
 # }
 
 
-resource "aws_iam_role" "eks_cluster" {
-  name = "eks-cluster"
+### Need to fix subnets ###
+## - Not allocating public IPv4 IPs
 
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "eks.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-POLICY
-}
 
-resource "aws_iam_role_policy_attachment" "AmazonEKSClusterPolicy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.eks_cluster.name
-}
+# resource "aws_iam_role" "eks_cluster" {
+#   name = "eks-cluster"
+#
+#   assume_role_policy = <<POLICY
+# {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Effect": "Allow",
+#       "Principal": {
+#         "Service": "eks.amazonaws.com"
+#       },
+#       "Action": "sts:AssumeRole"
+#     }
+#   ]
+# }
+# POLICY
+# }
+#
+# resource "aws_iam_role_policy_attachment" "AmazonEKSClusterPolicy" {
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+#   role       = aws_iam_role.eks_cluster.name
+# }
+#
+# resource "aws_iam_role_policy_attachment" "AmazonEKSServicePolicy" {
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
+#   role       = aws_iam_role.eks_cluster.name
+# }
 
-resource "aws_iam_role_policy_attachment" "AmazonEKSServicePolicy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
-  role       = aws_iam_role.eks_cluster.name
+resource "aws_cloudwatch_log_group" "aws_eks" {
+  name              = "/aws/eks/eks_cluster/cluster"
+  retention_in_days = 7
 }
 
 resource "aws_eks_cluster" "aws_eks" {
   name     = "eks_cluster"
-  role_arn = aws_iam_role.eks_cluster.arn
+  role_arn = "arn:aws:iam::616148879479:user/terraform"
 
   vpc_config {
     subnet_ids = [data.aws_subnet.eks-1.id, data.aws_subnet.eks-2.id]
@@ -284,6 +293,9 @@ resource "aws_eks_cluster" "aws_eks" {
   tags = {
     Name = "TF_EKS"
   }
+  
+  depends_on = [aws_cloudwatch_log_group.aws_eks]
+  enabled_cluster_log_types = ["api", "audit"]
 }
 
 resource "aws_iam_role" "eks_nodes" {
