@@ -128,117 +128,215 @@ data "aws_subnet" "eks-2" {
 #   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
 #   role       = aws_iam_role.tf-eks-role.name
 # }
-
-variable "map_roles" {
-  description = "Additional IAM roles to add to the aws-auth configmap."
-  type = list(object({
-    rolearn  = string
-    username = string
-    groups   = list(string)
-  }))
-
-  default = [
-    {
-      rolearn  = "arn:aws:iam::616148879479:role/admin"
-      username = "admin"
-      groups   = ["system:masters"]
-    },
-  ]
-}
-
-variable "map_users" {
-  description = "Additional IAM users to add to the aws-auth configmap."
-  type = list(object({
-    userarn  = string
-    username = string
-    groups   = list(string)
-  }))
-
-  default = [
-    {
-      userarn  = "arn:aws:iam::616148879479:user/terraform"
-      username = "terraform"
-      groups   = ["system:masters"]
-    },
-  ]
-}
-
-module "eks" {
-  source          = "terraform-aws-modules/eks/aws"
-  cluster_name    = "tf-eks1"
-  cluster_version = "1.18"
-  subnets         = [data.aws_subnet.eks-1.id, data.aws_subnet.eks-2.id]
-  write_kubeconfig = false
-
-  # tags = {
-  #   Environment = "training"
-  #   GithubRepo  = "terraform-aws-eks"
-  #   GithubOrg   = "terraform-aws-modules"
-  # }
-
-  vpc_id          = data.aws_vpc.prod-vpc.id
-
-  map_roles       = var.map_roles
-  map_users       = var.map_users
-
-  workers_group_defaults = {
-    root_volume_type = "gp2"
-  }
-
-  worker_groups = [
-    {
-      name                          = "tf-eks1-wg1"
-      instance_type                 = "t2.micro"
-      # additional_userdata           = "echo foo bar"
-      asg_desired_capacity          = 2
-      # additional_security_group_ids = [aws_security_group.worker_group_mgmt_one.id]
-      public_ip                     = true
-    },
-    # {
-    #   name                          = "worker-group-2"
-    #   instance_type                 = "t2.medium"
-    #   additional_userdata           = "echo foo bar"
-    #   additional_security_group_ids = [aws_security_group.worker_group_mgmt_two.id]
-    #   asg_desired_capacity          = 1
-    # },
-  ]
-}
-
-data "aws_eks_cluster" "cluster" {
-  name = module.eks.cluster_id
-}
-
-data "aws_eks_cluster_auth" "cluster" {
-  name = module.eks.cluster_id
-}
-
-
-# resource "aws_eks_cluster" "tf-eks-1" {
-#   name     = "tf-eks-1"
-#   # role_arn = aws_iam_role.tf-eks-role.arn
-#   role_arn = "arn:aws:iam::616148879479:user/terraform"
 #
+# variable "map_roles" {
+#   description = "Additional IAM roles to add to the aws-auth configmap."
+#   type = list(object({
+#     rolearn  = string
+#     username = string
+#     groups   = list(string)
+#   }))
 #
-#   vpc_config {
-#     subnet_ids = [data.aws_subnet.eks-1.id, data.aws_subnet.eks-2.id]
+#   default = [
+#     {
+#       rolearn  = "arn:aws:iam::616148879479:role/admin"
+#       username = "admin"
+#       groups   = ["system:masters"]
+#     },
+#   ]
+# }
+#
+# variable "map_users" {
+#   description = "Additional IAM users to add to the aws-auth configmap."
+#   type = list(object({
+#     userarn  = string
+#     username = string
+#     groups   = list(string)
+#   }))
+#
+#   default = [
+#     {
+#       userarn  = "arn:aws:iam::616148879479:user/terraform"
+#       username = "terraform"
+#       groups   = ["system:masters"]
+#     },
+#   ]
+# }
+#
+# module "eks" {
+#   source          = "terraform-aws-modules/eks/aws"
+#   cluster_name    = "tf-eks1"
+#   cluster_version = "1.18"
+#   subnets         = [data.aws_subnet.eks-1.id, data.aws_subnet.eks-2.id]
+#   write_kubeconfig = false
+#
+#   # tags = {
+#   #   Environment = "training"
+#   #   GithubRepo  = "terraform-aws-eks"
+#   #   GithubOrg   = "terraform-aws-modules"
+#   # }
+#
+#   vpc_id          = data.aws_vpc.prod-vpc.id
+#
+#   map_roles       = var.map_roles
+#   map_users       = var.map_users
+#
+#   workers_group_defaults = {
+#     root_volume_type = "gp2"
 #   }
 #
-#   # Ensure that IAM Role permissions are created before and deleted after EKS Cluster handling.
-#   # Otherwise, EKS will not be able to properly delete EKS managed EC2 infrastructure such as Security Groups.
-#   # depends_on = [
-#   #   aws_iam_role_policy_attachment.tf-eks-AmazonEKSClusterPolicy,
-#   #   aws_iam_role_policy_attachment.tf-eks-AmazonEKSVPCResourceController,
-#   # ]
+#   worker_groups = [
+#     {
+#       name                          = "tf-eks1-wg1"
+#       instance_type                 = "t2.micro"
+#       # additional_userdata           = "echo foo bar"
+#       asg_desired_capacity          = 2
+#       # additional_security_group_ids = [aws_security_group.worker_group_mgmt_one.id]
+#       public_ip                     = true
+#     },
+#     # {
+#     #   name                          = "worker-group-2"
+#     #   instance_type                 = "t2.medium"
+#     #   additional_userdata           = "echo foo bar"
+#     #   additional_security_group_ids = [aws_security_group.worker_group_mgmt_two.id]
+#     #   asg_desired_capacity          = 1
+#     # },
+#   ]
+# }
+#
+# data "aws_eks_cluster" "cluster" {
+#   name = module.eks.cluster_id
+# }
+#
+# data "aws_eks_cluster_auth" "cluster" {
+#   name = module.eks.cluster_id
+# }
+#
+#
+# # resource "aws_eks_cluster" "tf-eks-1" {
+# #   name     = "tf-eks-1"
+# #   # role_arn = aws_iam_role.tf-eks-role.arn
+# #   role_arn = "arn:aws:iam::616148879479:user/terraform"
+# #
+# #
+# #   vpc_config {
+# #     subnet_ids = [data.aws_subnet.eks-1.id, data.aws_subnet.eks-2.id]
+# #   }
+# #
+# #   # Ensure that IAM Role permissions are created before and deleted after EKS Cluster handling.
+# #   # Otherwise, EKS will not be able to properly delete EKS managed EC2 infrastructure such as Security Groups.
+# #   # depends_on = [
+# #   #   aws_iam_role_policy_attachment.tf-eks-AmazonEKSClusterPolicy,
+# #   #   aws_iam_role_policy_attachment.tf-eks-AmazonEKSVPCResourceController,
+# #   # ]
+# # }
+#
+# output "endpoint" {
+#   value = module.eks.cluster_endpoint
+# }
+#
+# output "kubeconfig" {
+#   value = module.eks.kubeconfig
+# }
+#
+# output "kubeconfig-certificate-authority-data" {
+#   value = module.eks.cluster_certificate_authority_data
 # }
 
-output "endpoint" {
-  value = module.eks.cluster_endpoint
+
+resource "aws_iam_role" "eks_cluster" {
+  name = "eks-cluster"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "eks.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
 }
 
-output "kubeconfig" {
-  value = module.eks.kubeconfig
+resource "aws_iam_role_policy_attachment" "AmazonEKSClusterPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.eks_cluster.name
 }
 
-output "kubeconfig-certificate-authority-data" {
-  value = module.eks.cluster_certificate_authority_data
+resource "aws_iam_role_policy_attachment" "AmazonEKSServicePolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
+  role       = aws_iam_role.eks_cluster.name
+}
+
+resource "aws_eks_cluster" "aws_eks" {
+  name     = "eks_cluster"
+  role_arn = aws_iam_role.eks_cluster.arn
+
+  vpc_config {
+    subnet_ids = [data.aws_subnet.eks-1.id, data.aws_subnet.eks-2.id]
+  }
+
+  tags = {
+    Name = "TF_EKS"
+  }
+}
+
+resource "aws_iam_role" "eks_nodes" {
+  name = "eks-node-group-1"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "AmazonEKSWorkerNodePolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+  role       = aws_iam_role.eks_nodes.name
+}
+
+resource "aws_iam_role_policy_attachment" "AmazonEKS_CNI_Policy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+  role       = aws_iam_role.eks_nodes.name
+}
+
+resource "aws_iam_role_policy_attachment" "AmazonEC2ContainerRegistryReadOnly" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  role       = aws_iam_role.eks_nodes.name
+}
+
+resource "aws_eks_node_group" "node" {
+  cluster_name    = aws_eks_cluster.aws_eks.name
+  node_group_name = "tf-eks-ng1"
+  node_role_arn   = aws_iam_role.eks_nodes.arn
+  subnet_ids      = [data.aws_subnet.eks-1.id, data.aws_subnet.eks-2.id]
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 1
+    min_size     = 1
+  }
+
+  # Ensure that IAM Role permissions are created before and deleted after EKS Node Group handling.
+  # Otherwise, EKS will not be able to properly delete EC2 Instances and Elastic Network Interfaces.
+  depends_on = [
+    aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnly,
+  ]
 }
