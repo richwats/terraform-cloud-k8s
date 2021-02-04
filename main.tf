@@ -294,7 +294,7 @@ module "eks" {
       name                          = "worker-group-1"
       instance_type                 = "t3.small"
       # additional_userdata           = "echo foo bar"
-      # asg_desired_capacity          = 3
+      asg_desired_capacity          = 3
       asg_min_size                  = 3
       # asg_recreate_on_change        = true
       additional_security_group_ids = [data.aws_security_group.tf-k8s-worker.id]
