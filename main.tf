@@ -287,10 +287,9 @@ module "eks" {
     ## Default to gp3 which doesn't work...
     root_volume_type = "gp2"
     public_ip = true
-    tags = {
-      EPG = "tf-k8s-worker"
-    }
-
+    tags = [
+      { EPG = "tf-k8s-worker" }
+      ]
   }
 
   worker_groups = [
