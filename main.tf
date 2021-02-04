@@ -254,9 +254,9 @@ module "eks" {
   # vpc_id = module.vpc.vpc_id
   vpc_id = data.aws_vpc.prod-vpc.id
 
-  # tags = {
-  #   EPG = "tf-k8s-worker"
-  # }
+  tags = {
+    EPG = "tf-k8s-worker"
+  }
 
   # node_groups_defaults = {
   #   ## Default to gp3 which doesn't work...
@@ -287,9 +287,6 @@ module "eks" {
     ## Default to gp3 which doesn't work...
     root_volume_type = "gp2"
     public_ip = true
-    tags = [
-      { EPG = "tf-k8s-worker" }
-      ]
   }
 
   worker_groups = [
