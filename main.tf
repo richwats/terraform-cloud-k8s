@@ -79,7 +79,9 @@ data "aws_vpc" "prod-vpc" {
 
 ## Existing EPG's SG ##
 data "aws_security_group" "tf-k8s-worker" {
-  name = "sgroup-[uni/tn-Production/cloudapp-tf-k8s-1/cloudepg-tf-k8s-worker]"
+  # name = "sgroup-[uni/tn-Production/cloudapp-tf-k8s-1/cloudepg-tf-k8s-worker]"
+  name = "uni/tn-Production/cloudapp-tf-k8s-1/cloudepg-tf-k8s-worker"
+  vpc_id = data.aws_vpc.prod-vpc.id
 }
 
 #### NEED TO MARK PUBLIC IPV4 AUTO ALLOCATION ###
