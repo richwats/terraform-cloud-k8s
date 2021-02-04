@@ -3,7 +3,7 @@ terraform {
     hostname = "app.terraform.io"
     organization = "mel-ciscolabs-com"
     workspaces {
-      name = "terraform-cloud-aci-demo"
+      name = "terraform-cloud-k8s"
     }
   }
   required_providers {
@@ -258,8 +258,10 @@ module "eks" {
     EPG = "tf-k8s-worker"
   }
 
+  ## Doesn't work??
   cluster_create_security_group = false
   cluster_security_group_id = data.aws_security_group.tf-k8s-worker.id
+  
   worker_create_security_group = false
   # worker_create_cluster_primary_security_group_rules = false
   worker_security_group_id = data.aws_security_group.tf-k8s-worker.id
