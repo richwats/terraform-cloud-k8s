@@ -62,6 +62,8 @@ provider "template" {
   # version = "~> 2.1"
 }
 
+### Common Data ###
+
 data "aws_eks_cluster" "cluster" {
   name = module.eks.cluster_id
 }
@@ -73,6 +75,11 @@ data "aws_eks_cluster_auth" "cluster" {
 ## Data - Existing Prod VPC
 data "aws_vpc" "prod-vpc" {
   cidr_block = "10.111.0.0/16"
+}
+
+## Existing EPG's SG ##
+data "aws_security_group" "tf-k8s-worker" {
+  name = "sgroup-[uni/tn-Production/cloudapp-tf-k8s-1/cloudepg-tf-k8s-worker]"
 }
 
 #### NEED TO MARK PUBLIC IPV4 AUTO ALLOCATION ###
@@ -245,53 +252,56 @@ module "eks" {
   # vpc_id = module.vpc.vpc_id
   vpc_id = data.aws_vpc.prod-vpc.id
 
-  node_groups_defaults = {
-    ## Default to gp3 which doesn't work...
-    root_volume_type = "gp2"
-  }
+  # tags = {
+  #   EPG = "tf-k8s-worker"
+  # }
 
-  node_groups = {
-    tf-ng-1 = {
-      desired_capacity = 3
-      max_capacity     = 3
-      min_capacity     = 3
-
-      instance_types = ["t3.small"]
-      capacity_type  = "SPOT"
-      # k8s_labels = {
-      #   Environment = "test"
-      #   GithubRepo  = "terraform-aws-eks"
-      #   GithubOrg   = "terraform-aws-modules"
-      # }
-      additional_tags = {
-        EPG = "tf-k8s-worker"
-      }
-    }
-  }
-  # workers_group_defaults = {
+  # node_groups_defaults = {
   #   ## Default to gp3 which doesn't work...
   #   root_volume_type = "gp2"
   # }
   #
-  # worker_groups = [
-  #   {
-  #     name                          = "worker-group-1"
-  #     instance_type                 = "t3.small"
-  #     # additional_userdata           = "echo foo bar"
-  #     # asg_desired_capacity          = 3
-  #     asg_min_size                  = 3
-  #     # asg_recreate_on_change        = true
+  # node_groups = {
+  #   tf-ng-1 = {
+  #     desired_capacity = 3
+  #     max_capacity     = 3
+  #     min_capacity     = 3
   #
-  #     # additional_security_group_ids = [aws_security_group.worker_group_mgmt_one.id]
-  #   },
-  #   # {
-  #   #   name                          = "worker-group-2"
-  #   #   instance_type                 = "t3.medium"
-  #   #   additional_userdata           = "echo foo bar"
-  #   #   additional_security_group_ids = [aws_security_group.worker_group_mgmt_two.id]
-  #   #   asg_desired_capacity          = 1
-  #   # },
-  # ]
+  #     instance_types = ["t3.small"]
+  #     capacity_type  = "SPOT"
+  #     # k8s_labels = {
+  #     #   Environment = "test"
+  #     #   GithubRepo  = "terraform-aws-eks"
+  #     #   GithubOrg   = "terraform-aws-modules"
+  #     # }
+  #
+  #     # ## Does not apply to EC2 instances
+  #     # additional_tags = {
+  #     #   EPG = "tf-k8s-worker"
+  #     # }
+  #   }
+  # }
+  workers_group_defaults = {
+    ## Default to gp3 which doesn't work...
+    root_volume_type = "gp2"
+    public_ip = true
+    tags = {
+      EPG = "tf-k8s-worker"
+    }
+
+  }
+
+  worker_groups = [
+    {
+      name                          = "worker-group-1"
+      instance_type                 = "t3.small"
+      # additional_userdata           = "echo foo bar"
+      # asg_desired_capacity          = 3
+      asg_min_size                  = 3
+      # asg_recreate_on_change        = true
+      additional_security_group_ids = [data.aws_security_group.tf-k8s-worker.id]
+    },
+  ]
 
   # worker_additional_security_group_ids = [aws_security_group.all_worker_mgmt.id]
   map_roles                            = var.map_roles
