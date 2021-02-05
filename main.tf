@@ -84,6 +84,11 @@ data "aws_security_group" "tf-k8s-worker" {
   vpc_id = data.aws_vpc.prod-vpc.id
 }
 
+data "aws_security_group" "tf-k8s-cluster" {
+  name = "uni/tn-Production/cloudapp-tf-k8s-1/cloudepg-tf-k8s-cluster"
+  vpc_id = data.aws_vpc.prod-vpc.id
+}
+
 #### NEED TO MARK PUBLIC IPV4 AUTO ALLOCATION ###
 
 ## Data - Existing Prod Subnets
@@ -260,8 +265,8 @@ module "eks" {
 
   ## Doesn't work??
   cluster_create_security_group = false
-  cluster_security_group_id = data.aws_security_group.tf-k8s-worker.id
-  
+  cluster_security_group_id = data.aws_security_group.tf-k8s-cluster.id
+
   worker_create_security_group = false
   # worker_create_cluster_primary_security_group_rules = false
   worker_security_group_id = data.aws_security_group.tf-k8s-worker.id
