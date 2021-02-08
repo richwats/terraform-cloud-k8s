@@ -340,5 +340,5 @@ module "eks" {
 
   cluster_enabled_log_types = ["audit","api"]
 
-  depends_on = [aws_subnet.eks-1,aws_subnet.eks-2]
+  # depends_on = [aws_subnet.eks-1,aws_subnet.eks-2]
 }
