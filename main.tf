@@ -258,7 +258,7 @@ module "eks" {
   cluster_version = "1.18"
   cluster_service_ipv4_cidr = "192.168.101.0/24"
   # subnets         = module.vpc.private_subnets
-  subnets         = [aws_subnet.eks-1.id, aws_subnet.eks-2.id]
+  subnets         = [data.aws_subnet.eks-1.id, data.aws_subnet.eks-2.id]
 
   cluster_create_security_group = false
   cluster_security_group_id = data.aws_security_group.tf-k8s-worker.id
