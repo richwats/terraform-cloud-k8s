@@ -62,16 +62,6 @@ provider "template" {
   # version = "~> 2.1"
 }
 
-### Common Data ###
-
-data "aws_eks_cluster" "cluster" {
-  name = module.eks.cluster_id
-}
-
-data "aws_eks_cluster_auth" "cluster" {
-  name = module.eks.cluster_id
-}
-
 ## Data - Existing Prod VPC
 data "aws_vpc" "prod-vpc" {
   cidr_block = "10.111.0.0/16"
@@ -79,27 +69,46 @@ data "aws_vpc" "prod-vpc" {
 
 ## Existing EPG's SG ##
 data "aws_security_group" "tf-k8s-worker" {
-  # name = "sgroup-[uni/tn-Production/cloudapp-tf-k8s-1/cloudepg-tf-k8s-worker]"
   name = "uni/tn-Production/cloudapp-tf-k8s-1/cloudepg-tf-k8s-worker"
-  vpc_id = data.aws_vpc.prod-vpc.id
-}
-
-data "aws_security_group" "tf-k8s-cluster" {
-  name = "uni/tn-Production/cloudapp-tf-k8s-1/cloudepg-tf-k8s-cluster"
   vpc_id = data.aws_vpc.prod-vpc.id
 }
 
 #### NEED TO MARK PUBLIC IPV4 AUTO ALLOCATION ###
 
 ## Data - Existing Prod Subnets
-data "aws_subnet" "eks-1" {
-  vpc_id = data.aws_vpc.prod-vpc.id
-  cidr_block = "10.111.3.0/24"
+# data "aws_subnet" "eks-1" {
+#   vpc_id = data.aws_vpc.prod-vpc.id
+#   cidr_block = "10.111.5.0/24"
+# }
+
+resource "aws_subnet" "eks-1" {
+  ## Exists but needs Auto IP Settings Changed
+  vpc_id     = data.aws_vpc.prod-vpc.id
+  cidr_block = "10.111.5.0/24"
+  map_public_ip_on_launch = true
 }
 
-data "aws_subnet" "eks-2" {
-  vpc_id = data.aws_vpc.prod-vpc.id
-  cidr_block = "10.111.4.0/24"
+# data "aws_subnet" "eks-2" {
+#   vpc_id = data.aws_vpc.prod-vpc.id
+#   cidr_block = "10.111.6.0/24"
+# }
+
+resource "aws_subnet" "eks-2" {
+  ## Exists but needs Auto IP Settings Changed
+  vpc_id     = data.aws_vpc.prod-vpc.id
+  cidr_block = "10.111.6.0/24"
+  map_public_ip_on_launch = true
+}
+
+
+### Build Kubernets Provider
+
+data "aws_eks_cluster" "cluster" {
+  name = module.eks.cluster_id
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = module.eks.cluster_id
 }
 
 provider "kubernetes" {
@@ -247,8 +256,15 @@ module "eks" {
   # version = "14.0.0"
   cluster_name    = local.cluster_name
   cluster_version = "1.18"
+  cluster_service_ipv4_cidr = "192.168.101.0/24"
   # subnets         = module.vpc.private_subnets
-  subnets         = [data.aws_subnet.eks-1.id, data.aws_subnet.eks-2.id]
+  subnets         = [aws_subnet.eks-1.id, aws_subnet.eks-2.id]
+
+  cluster_create_security_group = false
+  cluster_security_group_id = data.aws_security_group.tf-k8s-cluster.id
+
+  manage_cluster_iam_resources = false
+  cluster_iam_role_name = "ManualEKSClusterRole"
 
   # tags = {
   #   Environment = "test"
@@ -259,61 +275,63 @@ module "eks" {
   # vpc_id = module.vpc.vpc_id
   vpc_id = data.aws_vpc.prod-vpc.id
 
-  tags = {
-    EPG = "tf-k8s-worker"
-  }
+  # tags = {
+  #   EPG = "tf-k8s-worker"
+  # }
 
-  ## Doesn't work??
-  cluster_create_security_group = false
-  cluster_security_group_id = data.aws_security_group.tf-k8s-cluster.id
+  # ## Doesn't work??
+  # cluster_create_security_group = false
+  # cluster_security_group_id = data.aws_security_group.tf-k8s-cluster.id
 
-  worker_create_security_group = false
+  # worker_create_security_group = false
   # worker_create_cluster_primary_security_group_rules = false
-  worker_security_group_id = data.aws_security_group.tf-k8s-worker.id
+  # worker_security_group_id = data.aws_security_group.tf-k8s-worker.id
   # worker_additional_security_group_ids = [data.aws_security_group.tf-k8s-worker.id]
 
-  # node_groups_defaults = {
-  #   ## Default to gp3 which doesn't work...
-  #   root_volume_type = "gp2"
-  # }
-  #
-  # node_groups = {
-  #   tf-ng-1 = {
-  #     desired_capacity = 3
-  #     max_capacity     = 3
-  #     min_capacity     = 3
-  #
-  #     instance_types = ["t3.small"]
-  #     capacity_type  = "SPOT"
-  #     # k8s_labels = {
-  #     #   Environment = "test"
-  #     #   GithubRepo  = "terraform-aws-eks"
-  #     #   GithubOrg   = "terraform-aws-modules"
-  #     # }
-  #
-  #     # ## Does not apply to EC2 instances
-  #     # additional_tags = {
-  #     #   EPG = "tf-k8s-worker"
-  #     # }
-  #   }
-  # }
-  workers_group_defaults = {
+  node_groups_defaults = {
     ## Default to gp3 which doesn't work...
     root_volume_type = "gp2"
-    public_ip = true
+    iam_role_arn = "ManualEKSNodeRole"
   }
 
-  worker_groups = [
-    {
-      name                          = "worker-group-1"
-      instance_type                 = "t3.small"
-      # additional_userdata           = "echo foo bar"
-      asg_desired_capacity          = 3
-      asg_min_size                  = 3
-      # asg_recreate_on_change        = true
-      # additional_security_group_ids = [data.aws_security_group.tf-k8s-worker.id]
-    },
-  ]
+  node_groups = {
+    tf-ng-1 = {
+      desired_capacity = 3
+      max_capacity     = 3
+      min_capacity     = 3
+
+      instance_types = ["t3.small"]
+      capacity_type  = "SPOT"
+      # k8s_labels = {
+      #   Environment = "test"
+      #   GithubRepo  = "terraform-aws-eks"
+      #   GithubOrg   = "terraform-aws-modules"
+      # }
+
+      # ## Does not apply to EC2 instances
+      # additional_tags = {
+      #   EPG = "tf-k8s-worker"
+      # }
+    }
+  }
+
+  # workers_group_defaults = {
+  #   ## Default to gp3 which doesn't work...
+  #   root_volume_type = "gp2"
+  #   public_ip = true
+  # }
+  #
+  # worker_groups = [
+  #   {
+  #     name                          = "worker-group-1"
+  #     instance_type                 = "t3.small"
+  #     # additional_userdata           = "echo foo bar"
+  #     asg_desired_capacity          = 3
+  #     asg_min_size                  = 3
+  #     # asg_recreate_on_change        = true
+  #     # additional_security_group_ids = [data.aws_security_group.tf-k8s-worker.id]
+  #   },
+  # ]
 
   # worker_additional_security_group_ids = [aws_security_group.all_worker_mgmt.id]
   map_roles                            = var.map_roles
@@ -321,4 +339,6 @@ module "eks" {
   map_accounts                         = var.map_accounts
 
   cluster_enabled_log_types = ["audit","api"]
+
+  depends_on = [aws_subnet.eks-1,aws_subnet.eks-2]
 }
