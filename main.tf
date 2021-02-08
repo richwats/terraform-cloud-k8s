@@ -261,7 +261,7 @@ module "eks" {
   subnets         = [aws_subnet.eks-1.id, aws_subnet.eks-2.id]
 
   cluster_create_security_group = false
-  cluster_security_group_id = data.aws_security_group.tf-k8s-cluster.id
+  cluster_security_group_id = data.aws_security_group.tf-k8s-worker.id
 
   manage_cluster_iam_resources = false
   cluster_iam_role_name = "ManualEKSClusterRole"
