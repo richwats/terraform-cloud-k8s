@@ -283,9 +283,9 @@ module "eks" {
   # cluster_create_security_group = false
   # cluster_security_group_id = data.aws_security_group.tf-k8s-cluster.id
 
-  # worker_create_security_group = false
-  # worker_create_cluster_primary_security_group_rules = false
-  # worker_security_group_id = data.aws_security_group.tf-k8s-worker.id
+  worker_create_security_group = false
+  worker_create_cluster_primary_security_group_rules = false
+  worker_security_group_id = data.aws_security_group.tf-k8s-worker.id
   # worker_additional_security_group_ids = [data.aws_security_group.tf-k8s-worker.id]
 
   node_groups_defaults = {
