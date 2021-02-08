@@ -291,7 +291,7 @@ module "eks" {
   node_groups_defaults = {
     ## Default to gp3 which doesn't work...
     root_volume_type = "gp2"
-    iam_role_arn = "ManualEKSNodeRole"
+    iam_role_arn = "arn:aws:iam::616148879479:role/ManualEKSNodeRole"
   }
 
   node_groups = {
