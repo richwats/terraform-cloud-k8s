@@ -75,30 +75,30 @@ data "aws_security_group" "tf-k8s-worker" {
 
 #### NEED TO MARK PUBLIC IPV4 AUTO ALLOCATION ###
 
-## Data - Existing Prod Subnets
-# data "aws_subnet" "eks-1" {
-#   vpc_id = data.aws_vpc.prod-vpc.id
-#   cidr_block = "10.111.5.0/24"
-# }
-
-resource "aws_subnet" "eks-1" {
-  ## Exists but needs Auto IP Settings Changed
-  vpc_id     = data.aws_vpc.prod-vpc.id
+# Data - Existing Prod Subnets
+data "aws_subnet" "eks-1" {
+  vpc_id = data.aws_vpc.prod-vpc.id
   cidr_block = "10.111.5.0/24"
-  map_public_ip_on_launch = true
 }
 
-# data "aws_subnet" "eks-2" {
-#   vpc_id = data.aws_vpc.prod-vpc.id
-#   cidr_block = "10.111.6.0/24"
+# resource "aws_subnet" "eks-1" {
+#   ## Exists but needs Auto IP Settings Changed
+#   vpc_id     = data.aws_vpc.prod-vpc.id
+#   cidr_block = "10.111.5.0/24"
+#   map_public_ip_on_launch = true
 # }
 
-resource "aws_subnet" "eks-2" {
-  ## Exists but needs Auto IP Settings Changed
-  vpc_id     = data.aws_vpc.prod-vpc.id
+data "aws_subnet" "eks-2" {
+  vpc_id = data.aws_vpc.prod-vpc.id
   cidr_block = "10.111.6.0/24"
-  map_public_ip_on_launch = true
 }
+
+# resource "aws_subnet" "eks-2" {
+#   ## Exists but needs Auto IP Settings Changed
+#   vpc_id     = data.aws_vpc.prod-vpc.id
+#   cidr_block = "10.111.6.0/24"
+#   map_public_ip_on_launch = true
+# }
 
 
 ### Build Kubernets Provider
