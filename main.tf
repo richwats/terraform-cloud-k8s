@@ -251,10 +251,10 @@ variable "map_users" {
 #   }
 # }
 
-timeouts {
-  create = "20m"
-  delete = "15m"
-}
+# timeouts {
+#   create = "20m"
+#   delete = "15m"
+# }
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
