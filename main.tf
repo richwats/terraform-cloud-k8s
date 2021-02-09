@@ -251,6 +251,11 @@ variable "map_users" {
 #   }
 # }
 
+timeouts {
+  create = "20m"
+  delete = "15m"
+}
+
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   # version = "14.0.0"
@@ -265,11 +270,6 @@ module "eks" {
 
   manage_cluster_iam_resources = false
   cluster_iam_role_name = "ManualEKSClusterRole"
-
-  timeouts {
-    create = "20m"
-    delete = "15m"
-  }
 
   # tags = {
   #   Environment = "test"
