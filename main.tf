@@ -266,6 +266,11 @@ module "eks" {
   manage_cluster_iam_resources = false
   cluster_iam_role_name = "ManualEKSClusterRole"
 
+  timeouts {
+    create = "20m"
+    delete = "15m"
+  }
+
   # tags = {
   #   Environment = "test"
   #   GithubRepo  = "terraform-aws-eks"
