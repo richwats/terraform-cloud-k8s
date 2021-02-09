@@ -299,26 +299,26 @@ module "eks" {
     iam_role_arn = "arn:aws:iam::616148879479:role/ManualEKSNodeRole"
   }
 
-  node_groups = {
-    tf-ng-1 = {
-      desired_capacity = 3
-      max_capacity     = 3
-      min_capacity     = 3
-
-      instance_types = ["t3.small"]
-      capacity_type  = "SPOT"
-      # k8s_labels = {
-      #   Environment = "test"
-      #   GithubRepo  = "terraform-aws-eks"
-      #   GithubOrg   = "terraform-aws-modules"
-      # }
-
-      # ## Does not apply to EC2 instances
-      # additional_tags = {
-      #   EPG = "tf-k8s-worker"
-      # }
-    }
-  }
+  # node_groups = {
+  #   tf-ng-1 = {
+  #     desired_capacity = 3
+  #     max_capacity     = 3
+  #     min_capacity     = 3
+  #
+  #     instance_types = ["t3.small"]
+  #     capacity_type  = "SPOT"
+  #     # k8s_labels = {
+  #     #   Environment = "test"
+  #     #   GithubRepo  = "terraform-aws-eks"
+  #     #   GithubOrg   = "terraform-aws-modules"
+  #     # }
+  #
+  #     # ## Does not apply to EC2 instances
+  #     # additional_tags = {
+  #     #   EPG = "tf-k8s-worker"
+  #     # }
+  #   }
+  # }
 
   # workers_group_defaults = {
   #   ## Default to gp3 which doesn't work...
