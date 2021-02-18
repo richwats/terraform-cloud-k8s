@@ -271,6 +271,7 @@ module "eks" {
 
   manage_cluster_iam_resources = false
   cluster_iam_role_name = "ManualEKSClusterRole"
+  manage_worker_iam_resources = false
 
   # tags = {
   #   Environment = "test"
@@ -278,16 +279,15 @@ module "eks" {
   #   GithubOrg   = "terraform-aws-modules"
   # }
 
+  cluster_create_timeout = "20m"
+  cluster_delete_timeout = "20m"
+
   # vpc_id = module.vpc.vpc_id
   vpc_id = data.aws_vpc.prod-vpc.id
 
   # tags = {
   #   EPG = "tf-k8s-worker"
   # }
-
-  # ## Doesn't work??
-  # cluster_create_security_group = false
-  # cluster_security_group_id = data.aws_security_group.tf-k8s-cluster.id
 
   worker_create_security_group = false
   worker_create_cluster_primary_security_group_rules = false
