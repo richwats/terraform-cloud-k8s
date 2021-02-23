@@ -276,8 +276,8 @@ data "vault_generic_secret" "azure" {
 }
 
 data "azurerm_resource_group" "tf-hc-prod" {
-  name     = "aks-resource-group"
-  location = "eastus"
+  name     = "CAPIC_Production_tf-hc-prod_australiasoutheast"
+  # location = "eastus"
 }
 
 provider azurerm {
