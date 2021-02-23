@@ -297,9 +297,6 @@ provider azuread {
   client_secret     = data.vault_generic_secret.azure.data["secret"]
   # subscription_id   = data.vault_generic_secret.azure.data["subscription_id"]
   tenant_id         = data.vault_generic_secret.azure.data["tenant"]
-  # whilst the `version` attribute is optional, we recommend pinning to a given version of the Provider
-  # version = "=2.0.0"
-  features {}
 }
 
 # data "azuread_group" "tf-hc-prod" {
@@ -307,6 +304,7 @@ provider azuread {
 # }
 #
 data "azuread_group" "cluster-admins" {
+  # object_id        = "f94d8ddb-e4d6-4e5c-8d41-c29d9ddc29e6"
   display_name     = "ManualAKSClusterAdmins"
   # security_enabled = true
 }
