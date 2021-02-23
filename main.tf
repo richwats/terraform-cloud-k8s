@@ -217,6 +217,8 @@ module "eks" {
   cluster_create_timeout = "20m"
   cluster_delete_timeout = "20m"
 
+  write_kubeconfig = false
+
   # vpc_id = module.vpc.vpc_id
   vpc_id = data.aws_vpc.prod-vpc.id
 
