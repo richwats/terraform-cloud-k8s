@@ -201,8 +201,8 @@ module "eks" {
   subnets         = [data.aws_subnet.eks-1.id, data.aws_subnet.eks-2.id]
 
   # # Doesn't work?  Still creates own SG?
-  # cluster_create_security_group = false
-  # cluster_security_group_id = data.aws_security_group.tf-k8s-worker.id
+  cluster_create_security_group = false
+  cluster_security_group_id = data.aws_security_group.tf-k8s-worker.id
 
   manage_cluster_iam_resources = false
   cluster_iam_role_name = "ManualEKSClusterRole"
