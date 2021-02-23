@@ -291,6 +291,17 @@ provider azurerm {
   features {}
 }
 
+provider azuread {
+  # alias           = "production"
+  client_id         = data.vault_generic_secret.azure.data["client_id"]
+  client_secret     = data.vault_generic_secret.azure.data["secret"]
+  # subscription_id   = data.vault_generic_secret.azure.data["subscription_id"]
+  tenant_id         = data.vault_generic_secret.azure.data["tenant"]
+  # whilst the `version` attribute is optional, we recommend pinning to a given version of the Provider
+  # version = "=2.0.0"
+  features {}
+}
+
 # data "azuread_group" "tf-hc-prod" {
 #   name = "AKS-cluster-admins"
 # }
