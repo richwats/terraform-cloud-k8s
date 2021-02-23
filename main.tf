@@ -294,6 +294,17 @@ data "azurerm_virtual_network" "tf-hc-prod" {
   resource_group_name = data.azurerm_resource_group.tf-hc-prod.name
 }
 
+provider azurerm {
+  # alias           = "production"
+  client_id         = data.vault_generic_secret.azure.data["client_id"]
+  client_secret     = data.vault_generic_secret.azure.data["secret"]
+  subscription_id   = data.vault_generic_secret.azure.data["subscription_id"]
+  tenant_id         = data.vault_generic_secret.azure.data["tenant"]
+  # whilst the `version` attribute is optional, we recommend pinning to a given version of the Provider
+  # version = "=2.0.0"
+  features {}
+}
+
 module "aks" {
   source                           = "Azure/aks/azurerm"
   resource_group_name              = data.azurerm_resource_group.tf-hc-prod.name
