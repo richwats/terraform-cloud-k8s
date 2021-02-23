@@ -11,6 +11,14 @@ terraform {
       source = "hashicorp/aws"
       version = "3.25.0"
     }
+    azurerm = {
+      source = "hashicorp/azurerm"
+      version = "2.48.0"
+    }
+    azuread = {
+      source = "hashicorp/azuread"
+      version = "1.4.0"
+    }
     vault = {
       source = "hashicorp/vault"
       version = "2.18.0"
@@ -176,98 +184,25 @@ variable "map_users" {
   ]
 }
 
-# resource "aws_security_group" "worker_group_mgmt_one" {
-#   name_prefix = "worker_group_mgmt_one"
-#   # vpc_id      = module.vpc.vpc_id
-#   vpc_id = data.aws_vpc.prod-vpc.id
-#
-#   ingress {
-#     from_port = 22
-#     to_port   = 22
-#     protocol  = "tcp"
-#
-#     cidr_blocks = [
-#       "0.0.0.0/0",
-#       # "10.0.0.0/8",
-#     ]
-#   }
-# }
+### HashiCorp EKS Module ###
+# - Security Group manually assigned to prevent new SGs being created - CAPIC will override otherwise
+# - IP-based (Subnet) from CAPIC - EPG mapping
+# - Open ACL - Need restricting
+# - Cluster SG always created by EKS - can't manually assign
 
-# resource "aws_security_group" "worker_group_mgmt_two" {
-#   name_prefix = "worker_group_mgmt_two"
-#   vpc_id      = module.vpc.vpc_id
-#
-#   ingress {
-#     from_port = 22
-#     to_port   = 22
-#     protocol  = "tcp"
-#
-#     cidr_blocks = [
-#       "192.168.0.0/16",
-#     ]
-#   }
-# }
-
-# resource "aws_security_group" "all_worker_mgmt" {
-#   name_prefix = "all_worker_management"
-#   # vpc_id      = module.vpc.vpc_id
-#   vpc_id = data.aws_vpc.prod-vpc.id
-#
-#   ingress {
-#     from_port = 22
-#     to_port   = 22
-#     protocol  = "tcp"
-#
-#     cidr_blocks = [
-#       "0.0.0.0/0",
-#       # "10.0.0.0/8",
-#       # "172.16.0.0/12",
-#       # "192.168.0.0/16",
-#     ]
-#   }
-# }
-
-# module "vpc" {
-#   source  = "terraform-aws-modules/vpc/aws"
-#   version = "2.47.0"
-#
-#   name                 = "test-vpc"
-#   cidr                 = "10.0.0.0/16"
-#   azs                  = data.aws_availability_zones.available.names
-#   private_subnets      = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-#   public_subnets       = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
-#   enable_nat_gateway   = true
-#   single_nat_gateway   = true
-#   enable_dns_hostnames = true
-#
-#   public_subnet_tags = {
-#     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
-#     "kubernetes.io/role/elb"                      = "1"
-#   }
-#
-#   private_subnet_tags = {
-#     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
-#     "kubernetes.io/role/internal-elb"             = "1"
-#   }
-# }
-
-# timeouts {
-#   create = "20m"
-#   delete = "15m"
-# }
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   # version = "14.0.0"
   cluster_name    = local.cluster_name
-  cluster_version = "1.18"
+  cluster_version = "1.19"
   cluster_service_ipv4_cidr = "192.168.101.0/24"
   # subnets         = module.vpc.private_subnets
   subnets         = [data.aws_subnet.eks-1.id, data.aws_subnet.eks-2.id]
 
-  # Doesn't work?  Still creates own SG?
-  cluster_create_security_group = false
-  cluster_security_group_id = data.aws_security_group.tf-k8s-worker.id
+  # # Doesn't work?  Still creates own SG?
+  # cluster_create_security_group = false
+  # cluster_security_group_id = data.aws_security_group.tf-k8s-worker.id
 
   manage_cluster_iam_resources = false
   cluster_iam_role_name = "ManualEKSClusterRole"
@@ -323,25 +258,6 @@ module "eks" {
     }
   }
 
-  # workers_group_defaults = {
-  #   ## Default to gp3 which doesn't work...
-  #   root_volume_type = "gp2"
-  #   public_ip = true
-  # }
-  #
-  # worker_groups = [
-  #   {
-  #     name                          = "worker-group-1"
-  #     instance_type                 = "t3.small"
-  #     # additional_userdata           = "echo foo bar"
-  #     asg_desired_capacity          = 3
-  #     asg_min_size                  = 3
-  #     # asg_recreate_on_change        = true
-  #     # additional_security_group_ids = [data.aws_security_group.tf-k8s-worker.id]
-  #   },
-  # ]
-
-  # worker_additional_security_group_ids = [aws_security_group.all_worker_mgmt.id]
   map_roles                            = var.map_roles
   map_users                            = var.map_users
   map_accounts                         = var.map_accounts
@@ -349,4 +265,75 @@ module "eks" {
   cluster_enabled_log_types = ["audit","api"]
 
   # depends_on = [aws_subnet.eks-1,aws_subnet.eks-2]
+}
+
+
+
+#### Azure Kubernetes Service ####
+
+data "vault_generic_secret" "azure" {
+  path = "kv/azure"
+}
+
+data "azurerm_resource_group" "tf-hc-prod" {
+  name     = "aks-resource-group"
+  location = "eastus"
+}
+
+# data "azuread_group" "tf-hc-prod" {
+#   name = "AKS-cluster-admins"
+# }
+#
+data "azuread_group" "cluster-admins" {
+  display_name     = "ManualAKSClusterAdmins"
+  security_enabled = true
+}
+
+data "azurerm_virtual_network" "tf-hc-prod" {
+  name                = "tf-hc-prod"
+  resource_group_name = data.azurerm_resource_group.tf-hc-prod.name
+}
+
+module "aks" {
+  source                           = "Azure/aks/azurerm"
+  resource_group_name              = data.azurerm_resource_group.tf-hc-prod.name
+  client_id                        = data.vault_generic_secret.azure.data["client_id"]
+  client_secret                    = data.vault_generic_secret.azure.data["secret"]
+  kubernetes_version               = "1.19.3"
+  orchestrator_version             = "1.19.3"
+  prefix                           = "tf-aks"
+  network_plugin                   = "azure"
+  vnet_subnet_id                   = data.azurerm_virtual_network.tf-hc-prod.id
+  os_disk_size_gb                  = 50
+  sku_tier                         = "Paid" # defaults to Free
+  enable_role_based_access_control = true
+  rbac_aad_admin_group_object_ids  = [data.azuread_group.cluster-admins.id]
+  rbac_aad_managed                 = true
+  private_cluster_enabled          = true # default value
+  enable_http_application_routing  = true
+  enable_azure_policy              = true
+  enable_auto_scaling              = true
+  agents_min_count                 = 1
+  agents_max_count                 = 2
+  agents_count                     = null # Please set `agents_count` `null` while `enable_auto_scaling` is `true` to avoid possible `agents_count` changes.
+  agents_max_pods                  = 100
+  agents_pool_name                 = "exnodepool"
+  # agents_availability_zones        = ["1", "2"]
+  agents_type                      = "VirtualMachineScaleSets"
+  agents_size                      = "Standard DS1 v2"
+
+  agents_labels = {
+    "nodepool" : "defaultnodepool"
+  }
+
+  agents_tags = {
+    "Agent" : "defaultnodepoolagent"
+  }
+
+  network_policy                 = "azure"
+  # net_profile_dns_service_ip     = "10.0.0.10"
+  # net_profile_docker_bridge_cidr = "170.10.0.1/16"
+  net_profile_service_cidr       = "192.168.102.0/24"
+
+  # depends_on = [module.network]
 }
