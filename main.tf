@@ -323,7 +323,7 @@ module "aks" {
   client_secret                    = data.vault_generic_secret.azure.data["secret"]
   # kubernetes_version               = "1.19.3"
   # orchestrator_version             = "1.19.3"
-  prefix                           = "tf-aks"
+  prefix                           = "tf-"
   network_plugin                   = "azure"
   vnet_subnet_id                   = data.azurerm_virtual_network.tf-hc-prod.id
   os_disk_size_gb                  = 50
@@ -342,7 +342,7 @@ module "aks" {
   agents_pool_name                 = "exnodepool"
   # agents_availability_zones        = ["1", "2"]
   agents_type                      = "VirtualMachineScaleSets"
-  agents_size                      = "Standard DS1 v2"
+  agents_size                      = "standard_a2_v2"
 
   agents_labels = {
     "nodepool" : "defaultnodepool"
