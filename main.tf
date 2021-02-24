@@ -323,7 +323,7 @@ module "aks" {
   client_secret                    = data.vault_generic_secret.azure.data["secret"]
   # kubernetes_version               = "1.19.3"
   # orchestrator_version             = "1.19.3"
-  prefix                           = "tf-"
+  prefix                           = "tf"
   network_plugin                   = "azure"
   vnet_subnet_id                   = data.azurerm_virtual_network.tf-hc-prod.id
   os_disk_size_gb                  = 50
