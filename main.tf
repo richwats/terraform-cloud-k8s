@@ -316,6 +316,12 @@ data "azurerm_virtual_network" "tf-hc-prod" {
   resource_group_name = data.azurerm_resource_group.tf-hc-prod.name
 }
 
+data "azurerm_subnet" "sub-1" {
+  name                 = "subnet-10.112.3.0_24"
+  virtual_network_name = data.azurerm_virtual_network.tf-hc-prod.name
+  resource_group_name  = data.azurerm_resource_group.tf-hc-prod.name
+}
+
 module "aks" {
   source                           = "Azure/aks/azurerm"
   resource_group_name              = data.azurerm_resource_group.tf-hc-prod.name
@@ -325,7 +331,7 @@ module "aks" {
   # orchestrator_version             = "1.19.3"
   prefix                           = "tf"
   network_plugin                   = "azure"
-  vnet_subnet_id                   = data.azurerm_virtual_network.tf-hc-prod.id
+  vnet_subnet_id                   = data.azurerm_subnet.sub-1.id
   os_disk_size_gb                  = 50
   sku_tier                         = "Paid" # defaults to Free
   enable_role_based_access_control = true
